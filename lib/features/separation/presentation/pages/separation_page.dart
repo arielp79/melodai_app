@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/audio/stem_audio_player.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../../../../core/routing/export_route.dart';
 import '../../../../core/routing/mixer_route.dart';
 import '../../domain/entities/separation_job.dart';
 import '../../domain/entities/separation_stem.dart';
@@ -204,6 +205,16 @@ class _SeparationPageState extends State<SeparationPage> {
                               ),
                               icon: const Icon(Icons.tune),
                               label: const Text('Abrir mixer'),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: job.stems.any(_stemHasAudio)
+                                  ? () => context.go(
+                                        exportRouteForJob(job.jobId),
+                                      )
+                                  : null,
+                              icon: const Icon(Icons.download_outlined),
+                              label: const Text('Exportar pistas'),
                             ),
                             const SizedBox(height: 8),
                             Text(

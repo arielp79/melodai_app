@@ -13,16 +13,13 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/upload/presentation/pages/upload_page.dart';
 import '../../features/separation/presentation/pages/separation_page.dart';
 import '../../features/mixer/presentation/pages/mixer_page.dart';
+import '../../features/export/presentation/pages/export_page.dart';
 
 import '../di/injection.dart' as di;
 
 import 'app_routes.dart';
 
 import 'go_router_refresh_stream.dart';
-
-import 'route_placeholders.dart';
-
-
 
 /// Configuración central de navegación con redirección según sesión.
 
@@ -143,13 +140,14 @@ class AppRouter {
         ),
 
         GoRoute(
-
           path: AppRoutes.export,
-
-          builder: (context, state) =>
-
-              const RoutePlaceholder(label: 'Export (placeholder)'),
-
+          builder: (context, state) {
+            final jobId = state.uri.queryParameters['jobId'];
+            return ExportPage(
+              viewModel: di.exportViewModel,
+              jobId: jobId,
+            );
+          },
         ),
 
       ];

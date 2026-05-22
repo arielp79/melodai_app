@@ -43,6 +43,8 @@ dependencies:
   just_audio: ^0.10.4
   just_audio_windows: ^0.2.2
   mime: ^2.0.0
+  archive: ^4.0.7
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

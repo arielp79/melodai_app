@@ -50,6 +50,10 @@ import '../../features/separation/domain/usecases/create_separation_job.dart';
 import '../../features/separation/domain/usecases/get_separation_job.dart';
 import '../../features/separation/presentation/viewmodels/separation_view_model.dart';
 import '../../features/mixer/presentation/viewmodels/mixer_view_model.dart';
+import '../../features/export/data/datasources/stem_file_exporter.dart';
+import '../../features/export/domain/usecases/export_stem_file.dart';
+import '../../features/export/domain/usecases/export_stems_zip.dart';
+import '../../features/export/presentation/viewmodels/export_view_model.dart';
 
 import '../auth/auth_session_store.dart';
 
@@ -75,6 +79,7 @@ late final UploadViewModel uploadViewModel;
 late final SeparationRepository separationRepository;
 late final SeparationViewModel separationViewModel;
 late final MixerViewModel mixerViewModel;
+late final ExportViewModel exportViewModel;
 
 
 
@@ -166,6 +171,13 @@ void initDependencies() {
 
   mixerViewModel = MixerViewModel(
     getSeparationJob: GetSeparationJob(separationRepository),
+  );
+
+  final exportRepository = StemFileExporter();
+  exportViewModel = ExportViewModel(
+    getSeparationJob: GetSeparationJob(separationRepository),
+    exportStemFile: ExportStemFile(exportRepository),
+    exportStemsZip: ExportStemsZip(exportRepository),
   );
 }
 
