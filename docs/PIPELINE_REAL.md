@@ -114,6 +114,8 @@ GOOGLE_APPLICATION_CREDENTIALS=../backend/service-account.json
 | Job completa sin audio | Stub Node o caché stub antigua | Health en redis; sube archivo nuevo o otro hash |
 | Worker no consume | Cola distinta / Redis distinto | Misma `REDIS_SEPARATION_QUEUE` en ambos `.env` |
 | `Demucs falló` | Sin ffmpeg | `winget install ffmpeg`, nueva terminal |
+| `CERTIFICATE_VERIFY_FAILED` al descargar modelo | Python 3.14 + certifi en Windows | Reinicia el worker; usa truststore (sin `SSL_CERT_FILE` a certifi). Al arrancar debe precargar el modelo o mostrar aviso |
+| `TorchCodec is required` | TorchAudio 2.9+ al guardar stems | `pip install soundfile` en `worker/` y reinicia `python main.py` |
 | Muy lento | CPU + modelo 6 stems | Normal; prueba clips &lt; 30 s o `DEMUCS_DEVICE=cuda` |
 | `403` en internal API | `WORKER_API_KEY` distinto | Unificar en backend y worker |
 

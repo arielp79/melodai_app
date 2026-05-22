@@ -3,17 +3,9 @@ import logging
 import os
 import sys
 
-import certifi
+from ssl_bootstrap import apply_windows_ssl
 
-# Windows: certificados del sistema para GCS / google-auth.
-os.environ.setdefault("SSL_CERT_FILE", certifi.where())
-os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
-try:
-    import truststore
-
-    truststore.inject_into_ssl()
-except ImportError:
-    pass
+apply_windows_ssl()
 
 import redis
 
@@ -43,6 +35,15 @@ def run() -> None:
             settings.demucs_device,
             settings.demucs_fallback_stub,
         )
+        try:
+            from demucs_runner import prewarm_demucs_model
+
+            prewarm_demucs_model(settings.demucs_model)
+        except Exception as exc:
+            logger.warning(
+                "Precarga del modelo Demucs falló (se reintentará en el job): %s",
+                exc,
+            )
     else:
         logger.info("HTDemucs desactivado (DEMUCS_ENABLED=false) — modo stub")
 

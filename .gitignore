@@ -52,6 +52,10 @@ backend/.data/
 # Worker Python
 worker/.venv/
 worker/.env
+worker/*.th
+
+# Credenciales locales (usar backend/.env)
+Mongo Melodai App.txt
 
 # Android Studio will place build artifacts here
 /android/app/debug

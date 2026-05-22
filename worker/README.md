@@ -75,4 +75,6 @@ Flujo: subir audio → **Separar pistas** → el worker descarga el mix, ejecuta
 | `Demucs falló` / ffmpeg | Instala ffmpeg y reinicia la terminal |
 | `CUDA not available` | Usa `DEMUCS_DEVICE=cpu` |
 | Muy lento | Normal en CPU; usa GPU o canciones cortas para pruebas |
+| `CERTIFICATE_VERIFY_FAILED` (Windows) | Python 3.14 + descarga modelo | Reinicia `python main.py`; el worker precarga el modelo con truststore al inicio |
+| `TorchCodec is required` | TorchAudio 2.9+ al guardar WAV | `pip install soundfile` y reinicia el worker (parche automático en `demucs_audio_patch.py`) |
 | Pistas sin play en app | Comprueba que el job terminó con `simulated: false` y archivos en Firebase Storage → `stems/...` |

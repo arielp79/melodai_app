@@ -4,16 +4,9 @@ import tempfile
 from pathlib import Path
 
 # Certificados Windows antes de importar google.cloud.
-import certifi
+from ssl_bootstrap import apply_windows_ssl
 
-os.environ.setdefault("SSL_CERT_FILE", certifi.where())
-os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
-try:
-    import truststore
-
-    truststore.inject_into_ssl()
-except ImportError:
-    pass
+apply_windows_ssl()
 
 from google.cloud import storage
 
