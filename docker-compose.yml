@@ -1,0 +1,12 @@
+# Redis local para la cola de separación (worker Python).
+# Uso: docker compose up -d
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - melodai_redis_data:/data
+
+volumes:
+  melodai_redis_data:
