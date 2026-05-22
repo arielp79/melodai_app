@@ -23,6 +23,10 @@ migrate_working_dir/
 # is commented out by default.
 #.vscode/
 
+# Firebase (claves de cliente — generar en local, ver docs/SECRETS_Y_GITHUB.md)
+lib/firebase_options.dart
+android/app/google-services.json
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id

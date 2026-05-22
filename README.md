@@ -8,6 +8,16 @@ Cliente Flutter (Feature-First) + orquestador Node.js para subida de audio con p
 
 ## Flutter
 
+**Primera vez:** configura Firebase en local (no va al repo):
+
+```powershell
+copy lib\firebase_options.example.dart lib\firebase_options.dart
+copy android\app\google-services.json.example android\app\google-services.json
+# Edita con tus claves o: flutterfire configure
+```
+
+Ver [docs/SECRETS_Y_GITHUB.md](docs/SECRETS_Y_GITHUB.md) si GitHub alertó por API keys.
+
 ```bash
 flutter pub get
 flutter run -d windows --dart-define=API_BASE_URL=http://127.0.0.1:3000
@@ -32,6 +42,7 @@ npm run dev
 3. App hace `PUT` directo al bucket (si no está en caché).
 4. `POST /uploads/complete` → registra el hash para deduplicación futura.
 5. `POST /separation/jobs` → job de separación Fase 1; `GET /separation/jobs/:id` para seguir el progreso.
+6. Tras completar → **Exportar pistas** (ZIP o cada stem .wav) desde la app.
 
 ## Worker de separación (Python + Redis)
 
