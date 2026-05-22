@@ -45,4 +45,8 @@ export const config = {
   /** URL base que usa el worker para callbacks (p. ej. http://127.0.0.1:3000). */
   orchestratorPublicUrl:
     process.env.ORCHESTRATOR_PUBLIC_URL?.trim() || `http://127.0.0.1:${Number.isFinite(port) ? port : 3000}`,
+  /** Cola Redis para señal de pre-calentamiento GPU (Fase 2 / AudioSep). */
+  redisGpuWarmupChannel:
+    process.env.REDIS_GPU_WARMUP_CHANNEL?.trim() || 'melodai:gpu:warmup',
+  nodeEnv: process.env.NODE_ENV ?? 'development',
 };

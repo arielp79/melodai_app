@@ -9,6 +9,7 @@ import {
   failSeparationJob,
   updateSeparationJobProgress,
 } from '../services/separationJobUpdates.js';
+import { publishGpuWarmupSignal } from '../services/gpuWarmupSignal.js';
 
 export const internalRouter = Router();
 
@@ -77,6 +78,23 @@ internalRouter.post(
       jobId: req.params.jobId,
       stems: result.stems,
     });
+  }),
+);
+
+internalRouter.post(
+  '/gpu/warmup',
+  asyncHandler(async (req, res) => {
+    const reason =
+      typeof req.body?.reason === 'string' && req.body.reason.trim()
+        ? req.body.reason.trim()
+        : 'manual';
+
+    const result = await publishGpuWarmupSignal({ reason, metadata: req.body?.metadata ?? {} });
+    if (!result.ok) {
+      return res.status(503).json({ error: result.error });
+    }
+
+    return res.json({ ok: true, channel: result.channel, reason });
   }),
 );
 

@@ -13,6 +13,7 @@ import {
 } from './db/separationJobsRepository.js';
 import {
   credentialsFileExists,
+  isGoogleManagedRuntime,
   loadFirebaseCredential,
   logStartupDiagnostics,
 } from './lib/credentials.js';
@@ -34,6 +35,10 @@ if (credential) {
 admin.initializeApp(firebaseOptions);
 
 const app = express();
+
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 app.use(
   cors({
@@ -67,8 +72,18 @@ app.get('/health', async (_req, res) => {
     },
     storage: {
       bucket: config.gcsBucketName || null,
-      credentials: credentialsFileExists(),
+      credentials: credentialsFileExists() || isGoogleManagedRuntime(),
+      credentialsMode: credentialsFileExists()
+        ? 'file'
+        : isGoogleManagedRuntime()
+          ? 'applicationDefault'
+          : 'missing',
     },
+    persistence: {
+      mongodbConfigured: Boolean(config.mongodbUri),
+      mongodbDb: config.mongodbDb,
+    },
+    environment: process.env.NODE_ENV ?? 'development',
   });
 });
 
@@ -96,8 +111,26 @@ await connectSeparationJobsRepository();
 await initSeparationRuntime();
 logStartupDiagnostics();
 
+if (config.nodeEnv === 'production') {
+  if (config.authDisabled) {
+    console.error('[melodai] AUTH_DISABLED=true en producción — desactiva antes de exponer el servicio.');
+  }
+  if (!config.mongodbUri) {
+    console.error('[melodai] MONGODB_URI obligatoria en producción.');
+  }
+  if (!config.workerApiKey) {
+    console.error('[melodai] WORKER_API_KEY obligatoria en producción.');
+  }
+  if (config.separationRedisFallbackStub) {
+    console.warn(
+      '[melodai] SEPARATION_REDIS_FALLBACK_STUB=true — los jobs pueden completarse en stub si Redis falla.',
+    );
+  }
+}
+
 app.listen(config.port, () => {
-  console.info(`[melodai] Orquestador en http://127.0.0.1:${config.port}`);
+  const publicUrl = config.orchestratorPublicUrl;
+  console.info(`[melodai] Orquestador escuchando en :${config.port} (${publicUrl})`);
   console.info(
     `[melodai] Separación: modo ${effectiveWorkerMode}` +
       (effectiveWorkerMode !== config.separationWorkerMode

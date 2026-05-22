@@ -6,6 +6,8 @@ Cliente Flutter (Feature-First) + orquestador Node.js para subida de audio con p
 
 **Pipeline real (Redis + worker HTDemucs):** [docs/PIPELINE_REAL.md](docs/PIPELINE_REAL.md) — `.\scripts\start-pipeline.ps1`
 
+**Producción (Atlas, Upstash, Cloud Run, worker GPU):** [docs/INFRA_PRODUCCION.md](docs/INFRA_PRODUCCION.md)
+
 ## Flutter
 
 **Primera vez:** configura Firebase en local (no va al repo):

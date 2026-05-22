@@ -17,28 +17,37 @@ export function credentialsFileExists() {
   return path != null && existsSync(path);
 }
 
+/** Cloud Run y GCE exponen K_SERVICE; ahí usamos Application Default Credentials. */
+export function isGoogleManagedRuntime() {
+  return Boolean(process.env.K_SERVICE || process.env.GOOGLE_CLOUD_PROJECT);
+}
+
 export function loadFirebaseCredential() {
   const path = resolveCredentialsPath();
-  if (!path || !existsSync(path)) {
-    return undefined;
+  if (path && existsSync(path)) {
+    return admin.credential.cert(path);
   }
-  return admin.credential.cert(path);
+  if (isGoogleManagedRuntime()) {
+    return admin.credential.applicationDefault();
+  }
+  return undefined;
 }
 
 export function logStartupDiagnostics() {
   const credsPath = resolveCredentialsPath();
-  if (!credentialsFileExists()) {
-    console.error(
-      '[melodai] FALTA service-account.json en:',
-      credsPath ?? '(ruta no configurada)',
-    );
-    console.error(
-      '[melodai] Firebase Console → Configuración → Cuentas de servicio → Generar nueva clave privada',
-    );
-    console.error(
-      '[melodai] Sin este archivo NO se pueden crear URLs firmadas para subir audio.',
-    );
+  if (credentialsFileExists()) {
+    console.info('[melodai] Credenciales GCS (archivo):', credsPath);
     return;
   }
-  console.info('[melodai] Credenciales GCS encontradas:', credsPath);
+  if (isGoogleManagedRuntime()) {
+    console.info('[melodai] Credenciales GCS: Application Default (cuenta de servicio del runtime)');
+    return;
+  }
+  console.error(
+    '[melodai] FALTA service-account.json en:',
+    credsPath ?? '(ruta no configurada)',
+  );
+  console.error(
+    '[melodai] En Cloud Run asigna una cuenta de servicio con Storage Object Admin.',
+  );
 }

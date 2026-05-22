@@ -123,6 +123,15 @@ npm install
 
 Comprueba: `GET http://127.0.0.1:3000/health`
 
+## Producción
+
+Docker + Cloud Run / Render: ver [docs/INFRA_PRODUCCION.md](../docs/INFRA_PRODUCCION.md) y [backend/.env.production.example](.env.production.example).
+
+```bash
+cd backend
+docker build -t melodai-orchestrator .
+```
+
 ## Flutter
 
 ```bash

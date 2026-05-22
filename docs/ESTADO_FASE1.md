@@ -1,6 +1,6 @@
 # Resumen técnico — MelodAI (estado al cerrar Fase 1)
 
-Cliente Flutter Feature-First + orquestador Node.js: auth, subida directa al bucket (presigned URLs + SHA-256), jobs de separación Fase 1, reproducción y mixer multicanal básico. **Sin export ni Fase 2 (AudioSep).**
+Cliente Flutter Feature-First + orquestador Node.js: auth, subida directa al bucket (presigned URLs + SHA-256), jobs de separación Fase 1, reproducción, mixer multicanal básico y **export** (stems .wav / ZIP en cliente). **Sin Fase 2 (AudioSep).**
 
 ## Objetivo cubierto (PRD)
 
@@ -19,7 +19,7 @@ Cliente Flutter Feature-First + orquestador Node.js: auth, subida directa al buc
 | **Worker** | Python 3, Redis BRPOP, google-cloud-storage, Demucs `htdemucs_6s` |
 | **Persistencia** | MongoDB opcional; sin URI → memoria (uploads + jobs) |
 
-**Feature-First:** `core/`, `features/auth`, `upload`, `separation`, `mixer` (placeholder futuro: `export`).
+**Feature-First:** `core/`, `features/auth`, `upload`, `separation`, `mixer`, `export`.
 
 ## Implementado por bloques
 
@@ -95,8 +95,8 @@ Cliente Flutter Feature-First + orquestador Node.js: auth, subida directa al buc
 ## Próximos pasos (orden PRD)
 
 1. **Cerrar pipeline real en dev/prod** — Redis (p. ej. Upstash), worker estable, HTDemucs en CPU/GPU, verificar stems en Storage y play en app (`simulated: false`).
-2. **`features/export/`** — Descarga stems o ZIP.
-3. **Infra producción** — MongoDB Atlas, despliegue orquestador, pre-calentamiento GPU (Redis) para Fase 2.
+2. ~~**`features/export/`**~~ — Descarga stems .wav y ZIP (cliente, tras separación real).
+3. **Infra producción** — Guía [INFRA_PRODUCCION.md](INFRA_PRODUCCION.md): Atlas, Upstash, Cloud Run/Render, worker GPU, señal `melodai:gpu:warmup`.
 4. **Fase 2** — AudioSep / instrumentos raros.
 5. **Mixer avanzado** — Sincronización al play, niveles, export de mezcla (opcional).
 
