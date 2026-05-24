@@ -1,3 +1,5 @@
+import './bootstrapEnv.js';
+
 import cors from 'cors';
 import express from 'express';
 import admin from 'firebase-admin';

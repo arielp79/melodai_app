@@ -1,5 +1,7 @@
 # Infraestructura de producción — MelodAI
 
+**Guía operativa paso a paso:** [DESPLIEGUE_PROD_PASOS.md](DESPLIEGUE_PROD_PASOS.md) (checklist, Upstash, Cloud Run/Render, worker GPU).
+
 Arquitectura objetivo según PRD:
 
 | Componente | Servicio recomendado |
