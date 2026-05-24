@@ -18,10 +18,16 @@ let client;
 let jobsCollection;
 let cacheCollection;
 let usingMemory = false;
+let mongoReady = false;
+
+export function isSeparationJobsReady() {
+  return usingMemory || mongoReady;
+}
 
 export async function connectSeparationJobsRepository() {
   if (!config.mongodbUri) {
     usingMemory = true;
+    mongoReady = true;
     jobsMemory = await loadJsonMap(JOBS_FILE);
     cacheMemory = await loadJsonMap(CACHE_FILE);
     console.warn(
@@ -33,14 +39,47 @@ export async function connectSeparationJobsRepository() {
     return;
   }
 
-  client = new MongoClient(config.mongodbUri);
-  await client.connect();
-  const db = client.db(config.mongodbDb);
-  jobsCollection = db.collection(JOBS_COLLECTION);
-  cacheCollection = db.collection(CACHE_COLLECTION);
-  await jobsCollection.createIndex({ jobId: 1 }, { unique: true });
-  await jobsCollection.createIndex({ userId: 1, sha256: 1 });
-  await cacheCollection.createIndex({ sha256: 1 }, { unique: true });
+  const uri = config.mongodbUri;
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      client = new MongoClient(uri);
+      await client.connect();
+      const db = client.db(config.mongodbDb);
+      jobsCollection = db.collection(JOBS_COLLECTION);
+      cacheCollection = db.collection(CACHE_COLLECTION);
+      await jobsCollection.createIndex({ jobId: 1 }, { unique: true });
+      await jobsCollection.createIndex({ userId: 1, sha256: 1 });
+      await cacheCollection.createIndex({ sha256: 1 }, { unique: true });
+      mongoReady = true;
+      console.info('[melodai] MongoDB conectado (separation_jobs).');
+      return;
+    } catch (error) {
+      lastError = error;
+      console.error(
+        `[melodai] MongoDB separation_jobs intento ${attempt}/3:`,
+        error instanceof Error ? error.message : error,
+      );
+      if (client) {
+        await client.close().catch(() => {});
+        client = undefined;
+      }
+      jobsCollection = undefined;
+      cacheCollection = undefined;
+      await new Promise((r) => setTimeout(r, attempt * 1000));
+    }
+  }
+
+  throw lastError ?? new Error('No se pudo conectar a MongoDB (separation_jobs).');
+}
+
+function assertReady() {
+  if (usingMemory) return;
+  if (!mongoReady || !jobsCollection || !cacheCollection) {
+    throw new Error(
+      'MongoDB no conectado (jobs). Revisa MONGODB_URI en Render y Atlas Network Access.',
+    );
+  }
 }
 
 export function createJobId() {
@@ -51,6 +90,7 @@ export async function findJobById(jobId) {
   if (usingMemory) {
     return jobsMemory.get(jobId) ?? null;
   }
+  assertReady();
   return jobsCollection.findOne({ jobId });
 }
 
@@ -74,6 +114,7 @@ export async function findActiveJobForUserHash(userId, sha256) {
     return null;
   }
 
+  assertReady();
   return jobsCollection.findOne(query, { sort: { createdAt: -1 } });
 }
 
@@ -83,6 +124,7 @@ export async function saveJob(job) {
     saveJsonMap(JOBS_FILE, jobsMemory);
     return;
   }
+  assertReady();
   await jobsCollection.updateOne({ jobId: job.jobId }, { $set: job }, { upsert: true });
 }
 
@@ -90,6 +132,7 @@ export async function findCachedSeparation(sha256) {
   if (usingMemory) {
     return cacheMemory.get(sha256) ?? null;
   }
+  assertReady();
   return cacheCollection.findOne({ sha256 });
 }
 
@@ -99,6 +142,7 @@ export async function saveSeparationCache(record) {
     saveJsonMap(CACHE_FILE, cacheMemory);
     return;
   }
+  assertReady();
   await cacheCollection.updateOne(
     { sha256: record.sha256 },
     { $set: record },

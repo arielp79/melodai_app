@@ -8,10 +8,12 @@ import { config } from './config.js';
 import {
   closeAudioUploadsRepository,
   connectAudioUploadsRepository,
+  isAudioUploadsReady,
 } from './db/audioUploadsRepository.js';
 import {
   closeSeparationJobsRepository,
   connectSeparationJobsRepository,
+  isSeparationJobsReady,
 } from './db/separationJobsRepository.js';
 import {
   credentialsFileExists,
@@ -49,6 +51,17 @@ app.use(
 );
 app.use(express.json({ limit: '1mb' }));
 
+let dependenciesReady = false;
+
+app.use((req, res, next) => {
+  if (dependenciesReady || req.path === '/health') {
+    return next();
+  }
+  return res.status(503).json({
+    error: 'Servidor iniciando. Reintenta en unos segundos.',
+  });
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
@@ -84,6 +97,7 @@ app.get('/health', async (_req, res) => {
     persistence: {
       mongodbConfigured: Boolean(config.mongodbUri),
       mongodbDb: config.mongodbDb,
+      mongodbReady: isAudioUploadsReady() && isSeparationJobsReady(),
     },
     environment: process.env.NODE_ENV ?? 'development',
   });
@@ -136,6 +150,7 @@ async function connectDependencies() {
   try {
     await connectAudioUploadsRepository();
     await connectSeparationJobsRepository();
+    dependenciesReady = true;
     await initSeparationRuntime();
     logStartupDiagnostics();
     logProductionWarnings();
@@ -154,6 +169,9 @@ async function connectDependencies() {
   } catch (error) {
     console.error('[melodai] Error conectando dependencias (Mongo/Redis):', error);
     logProductionWarnings();
+    console.error(
+      '[melodai] API bloqueada hasta MongoDB OK. Revisa MONGODB_URI en Render y Atlas 0.0.0.0/0.',
+    );
   }
 }
 
