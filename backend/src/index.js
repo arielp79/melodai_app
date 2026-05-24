@@ -52,6 +52,8 @@ app.use(
 app.use(express.json({ limit: '1mb' }));
 
 let dependenciesReady = false;
+/** @type {string | null} */
+let lastMongoConnectError = null;
 
 app.use((req, res, next) => {
   if (dependenciesReady || req.path === '/health') {
@@ -98,6 +100,8 @@ app.get('/health', async (_req, res) => {
       mongodbConfigured: Boolean(config.mongodbUri),
       mongodbDb: config.mongodbDb,
       mongodbReady: isAudioUploadsReady() && isSeparationJobsReady(),
+      dependenciesReady,
+      mongodbError: lastMongoConnectError,
     },
     environment: process.env.NODE_ENV ?? 'development',
   });
@@ -167,6 +171,8 @@ async function connectDependencies() {
       console.warn('[melodai] Las subidas fallarán hasta configurar credenciales GCS.');
     }
   } catch (error) {
+    lastMongoConnectError =
+      error instanceof Error ? error.message : String(error);
     console.error('[melodai] Error conectando dependencias (Mongo/Redis):', error);
     logProductionWarnings();
     console.error(

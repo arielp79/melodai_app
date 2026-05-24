@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+import { trimEnvValue } from './lib/envUtil.js';
+
 /** Firebase Console muestra gs://…; el SDK espera solo el nombre del bucket. */
 export function normalizeGcsBucketName(raw) {
   const trimmed = raw?.trim();
@@ -27,7 +29,7 @@ export const config = {
   /** Vacío = autodetectar entre .appspot.com y .firebasestorage.app (sin prefijo gs://) */
   gcsBucketName: normalizeGcsBucketName(process.env.GCS_BUCKET_NAME),
   googleApplicationCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-  mongodbUri: process.env.MONGODB_URI?.trim() || null,
+  mongodbUri: trimEnvValue(process.env.MONGODB_URI),
   mongodbDb: process.env.MONGODB_DB ?? 'melodai',
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
   authDisabled: process.env.AUTH_DISABLED === 'true',
