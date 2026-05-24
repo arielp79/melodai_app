@@ -7,7 +7,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: npm ci --omit=dev
-    startCommand: node --use-system-ca src/index.js
+    startCommand: node src/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION

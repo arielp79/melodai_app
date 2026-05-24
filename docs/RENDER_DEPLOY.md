@@ -19,7 +19,7 @@ Guía para `melodai-orchestrator` con Docker, MongoDB Atlas, Upstash y GCS.
 3. Conecta el repo `melodai_app` → Render detecta `render.yaml` en la raíz.
 4. Revisa el servicio `melodai-orchestrator` → **Apply**.
 
-Si no usas Blueprint: **New Web Service** → repo → **Node** → Root Directory `backend` → Build `npm ci --omit=dev` → Start `node --use-system-ca src/index.js`.
+Si no usas Blueprint: **New Web Service** → repo → **Node** → Root Directory `backend` → Build `npm ci --omit=dev` → Start `node src/index.js` (sin `--use-system-ca`; Node 20 en Render no lo soporta).
 
 > El Blueprint usa **runtime Node** (no Docker) para caber en el plan free (~512 MB RAM). Docker suele provocar `Exited with status 9` (proceso matado por memoria).
 
