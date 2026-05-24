@@ -164,16 +164,7 @@ Cuando no uses GPU: **Stop** / **Terminate** el pod en el dashboard.
 
 ---
 
-## 5. Apagar el worker local (recordatorio)
-
-1. App Flutter con `API_BASE_URL` de Render.
-2. Sube un audio **corto** (primera vez descarga el modelo en el pod).
-3. Logs del pod: descarga GCS → Demucs → subida stems.
-4. Job `completed` con `simulated: false`.
-
----
-
-## 7. Costes y operación
+## 6. Costes y operación
 
 | Tema | Nota |
 |------|------|
@@ -185,7 +176,7 @@ Cuando no uses GPU: **Stop** / **Terminate** el pod en el dashboard.
 
 ---
 
-## 8. Problemas frecuentes
+## 7. Problemas frecuentes
 
 | Síntoma | Solución |
 |---------|----------|
