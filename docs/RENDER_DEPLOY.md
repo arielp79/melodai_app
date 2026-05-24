@@ -127,11 +127,23 @@ REDIS_URL=rediss://...   # misma Upstash
 
 | Síntoma | Solución |
 |---------|----------|
-| Build falla | Logs en Render → revisa `backend/Dockerfile` y `package-lock.json` |
-| 502 al arrancar | Logs: error Mongo/Redis; comprueba URIs |
+| **Deploy failed** (build OK) | **Logs → Deploy** (no Build). Suele ser: Mongo sin `0.0.0.0/0` en Atlas, `REDIS_URL` mal, JSON GCP inválido, o health check sin puerto. Tras actualizar código, **Manual Deploy**. |
+| Build falla | **Logs → Build**: `npm ci` o Dockerfile. |
+| 502 al arrancar | Logs runtime: error Mongo/Redis; comprueba URIs |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Una sola línea con `render-gcp-json.ps1`; sin comillas extra alrededor del JSON |
 | Subida 503 GCS | JSON de cuenta de servicio incorrecto o sin permiso en el bucket |
 | Jobs en stub | `redisOk: false` o worker sin misma `REDIS_URL` / `WORKER_API_KEY` |
 | Plan free duerme | Primera petición tarda ~30 s (cold start) |
+
+### Cómo leer el fallo en Render
+
+1. Dashboard → servicio **melodai-orchestrator** → pestaña **Logs**.
+2. Abre el deploy fallido (**Events** → clic en **Deploy** rojo).
+3. Mira el final del log:
+   - **`npm ERR!`** → fallo de **build**.
+   - **`Error conectando dependencias`** → Mongo o Redis (Atlas IP / `REDIS_URL`).
+   - **`GOOGLE_SERVICE_ACCOUNT_JSON debe ser JSON`** → vuelve a pegar el JSON con `render-gcp-json.ps1`.
+   - **`no open ports`** / health check → actualiza repo (arranque en `0.0.0.0` + `/health`).
 
 ---
 

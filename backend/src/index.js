@@ -108,12 +108,8 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-await connectAudioUploadsRepository();
-await connectSeparationJobsRepository();
-await initSeparationRuntime();
-logStartupDiagnostics();
-
-if (config.nodeEnv === 'production') {
+function logProductionWarnings() {
+  if (config.nodeEnv !== 'production') return;
   if (config.authDisabled) {
     console.error('[melodai] AUTH_DISABLED=true en producción — desactiva antes de exponer el servicio.');
   }
@@ -130,22 +126,38 @@ if (config.nodeEnv === 'production') {
   }
 }
 
-app.listen(config.port, () => {
+/** Render/Cloud Run: escuchar antes que Mongo/Redis (health check en /health). */
+app.listen(config.port, '0.0.0.0', () => {
   const publicUrl = config.orchestratorPublicUrl;
-  console.info(`[melodai] Orquestador escuchando en :${config.port} (${publicUrl})`);
-  console.info(
-    `[melodai] Separación: modo ${effectiveWorkerMode}` +
-      (effectiveWorkerMode !== config.separationWorkerMode
-        ? ` (config=${config.separationWorkerMode})`
-        : ''),
-  );
-  if (effectiveWorkerMode === 'redis' && config.workerApiKey) {
-    console.info('[melodai] Worker API interna: POST /internal/separation/jobs/:id/*');
-  }
-  if (!credentialsFileExists()) {
-    console.warn('[melodai] Las subidas fallarán hasta configurar service-account.json');
-  }
+  console.info(`[melodai] Orquestador escuchando en 0.0.0.0:${config.port} (${publicUrl})`);
 });
+
+async function connectDependencies() {
+  try {
+    await connectAudioUploadsRepository();
+    await connectSeparationJobsRepository();
+    await initSeparationRuntime();
+    logStartupDiagnostics();
+    logProductionWarnings();
+    console.info(
+      `[melodai] Separación: modo ${effectiveWorkerMode}` +
+        (effectiveWorkerMode !== config.separationWorkerMode
+          ? ` (config=${config.separationWorkerMode})`
+          : ''),
+    );
+    if (effectiveWorkerMode === 'redis' && config.workerApiKey) {
+      console.info('[melodai] Worker API interna: POST /internal/separation/jobs/:id/*');
+    }
+    if (!credentialsFileExists()) {
+      console.warn('[melodai] Las subidas fallarán hasta configurar credenciales GCS.');
+    }
+  } catch (error) {
+    console.error('[melodai] Error conectando dependencias (Mongo/Redis):', error);
+    logProductionWarnings();
+  }
+}
+
+connectDependencies();
 
 try {
   await resolveStorageBucket();
