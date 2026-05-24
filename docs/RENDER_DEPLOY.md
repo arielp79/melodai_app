@@ -19,7 +19,9 @@ Guía para `melodai-orchestrator` con Docker, MongoDB Atlas, Upstash y GCS.
 3. Conecta el repo `melodai_app` → Render detecta `render.yaml` en la raíz.
 4. Revisa el servicio `melodai-orchestrator` → **Apply**.
 
-Si no usas Blueprint: **New Web Service** → repo → **Docker** → Dockerfile `backend/Dockerfile`, context `backend`.
+Si no usas Blueprint: **New Web Service** → repo → **Node** → Root Directory `backend` → Build `npm ci --omit=dev` → Start `node --use-system-ca src/index.js`.
+
+> El Blueprint usa **runtime Node** (no Docker) para caber en el plan free (~512 MB RAM). Docker suele provocar `Exited with status 9` (proceso matado por memoria).
 
 ---
 
@@ -127,6 +129,7 @@ REDIS_URL=rediss://...   # misma Upstash
 
 | Síntoma | Solución |
 |---------|----------|
+| **`Exited with status 9`** | Casi siempre **falta de RAM** en plan free (Docker + `npm ci`). Solución: Blueprint con **runtime Node** (`render.yaml` actual) o plan de pago. |
 | **Deploy failed** (build OK) | **Logs → Deploy** (no Build). Suele ser: Mongo sin `0.0.0.0/0` en Atlas, `REDIS_URL` mal, JSON GCP inválido, o health check sin puerto. Tras actualizar código, **Manual Deploy**. |
 | Build falla | **Logs → Build**: `npm ci` o Dockerfile. |
 | 502 al arrancar | Logs runtime: error Mongo/Redis; comprueba URIs |

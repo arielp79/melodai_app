@@ -1,14 +1,19 @@
-# Render.com — orquestador MelodAI (alternativa a Cloud Run)
-# Dashboard: conectar repo → Blueprint o crear Web Service manual con Docker.
+# Render.com — orquestador MelodAI
+# Runtime Node (más ligero que Docker en plan free; evita "Exited with status 9" por RAM).
 services:
   - type: web
     name: melodai-orchestrator
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    runtime: node
     plan: free
+    rootDir: backend
+    buildCommand: npm ci --omit=dev
+    startCommand: node --use-system-ca src/index.js
     healthCheckPath: /health
     envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=384
       - key: NODE_ENV
         value: production
       - key: FIREBASE_PROJECT_ID
@@ -33,6 +38,5 @@ services:
         sync: false
       - key: ORCHESTRATOR_PUBLIC_URL
         sync: false
-      # JSON minificado de service-account.json (Firebase/GCP)
       - key: GOOGLE_SERVICE_ACCOUNT_JSON
         sync: false
