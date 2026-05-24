@@ -3,6 +3,10 @@ import logging
 import os
 import sys
 
+from bootstrap_gcp import prepare_gcp_credentials
+
+prepare_gcp_credentials()
+
 from ssl_bootstrap import apply_windows_ssl
 
 apply_windows_ssl()

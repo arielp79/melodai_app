@@ -94,6 +94,8 @@ Resumen: Blueprint con [render.yaml](../render.yaml) → variables `MONGODB_URI`
 
 ## Paso 4 — Worker GPU
 
+Guía detallada: **[RUNPOD_WORKER.md](RUNPOD_WORKER.md)** (Docker + RunPod).
+
 No va en Cloud Run. RunPod / VM con [worker/.env.production.example](../worker/.env.production.example):
 
 ```env

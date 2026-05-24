@@ -60,6 +60,15 @@ flutter run -d windows --dart-define=API_BASE_URL=http://127.0.0.1:3000
 
 Flujo: subir audio → **Separar pistas** → el worker descarga el mix, ejecuta Demucs, sube `stems/{sha256}/*.wav` → en la app cada pista tiene botón **play**.
 
+## Producción (RunPod + GPU)
+
+Docker: [Dockerfile](Dockerfile) — guía paso a paso en [docs/RUNPOD_WORKER.md](../docs/RUNPOD_WORKER.md).
+
+```powershell
+cd worker
+docker build -t melodai-worker:latest .
+```
+
 ## Redis sin Docker
 
 [Upstash](https://upstash.com) → copia `REDIS_URL` (`rediss://...`) en `backend/.env` y `worker/.env`.

@@ -129,6 +129,8 @@ Esperado: `effectiveMode: "redis"`, `redisOk: true`, `mongodbConfigured: true`, 
 
 ## 4. Worker Python (GPU)
 
+Guía Docker + RunPod: **[RUNPOD_WORKER.md](RUNPOD_WORKER.md)**.
+
 El worker **no** va en Cloud Run (necesita GPU y procesos largos).
 
 | Opción | Notas |
