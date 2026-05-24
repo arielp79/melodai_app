@@ -20,9 +20,22 @@ Flutter → Render → Redis (Upstash) → RunPod (este worker) → GCS + callba
 
 ---
 
-## 2. Construir la imagen Docker
+## 2. Imagen Docker (elige una vía)
 
-Desde la raíz del repo (necesitas [Docker Desktop](https://www.docker.com/products/docker-desktop/) o build en GitHub Actions / RunPod).
+### A — Sin Docker en tu PC (recomendado)
+
+GitHub Actions construye la imagen al push en `main`:
+
+1. Repo → **Actions** → **Worker Docker (GHCR)** → **Run workflow**.
+2. Cuando termine en verde, la imagen queda en:
+   ```text
+   ghcr.io/arielp79/melodai-worker:latest
+   ```
+3. En GitHub → **Packages** → `melodai-worker` → **Package settings** → **Change visibility** → **Public** (RunPod debe poder hacer pull sin login).
+
+### B — Build local
+
+Desde la raíz del repo (necesitas [Docker Desktop](https://www.docker.com/products/docker-desktop/)).
 
 ```powershell
 cd C:\Proyectos\melodai_app\worker
@@ -41,7 +54,7 @@ En Windows sin GPU local, `docker build` basta; el test `--gpus` solo funciona c
 
 ---
 
-## 3. Subir la imagen a un registry
+## 3. Subir la imagen (solo si usaste build local)
 
 ### Docker Hub (ejemplo)
 
@@ -60,31 +73,72 @@ docker push ghcr.io/TU_USUARIO/melodai-worker:latest
 
 ---
 
-## 4. Crear el Pod en RunPod
+## 4. RunPod — dashboard paso a paso
 
-1. **Pods** → **Deploy** → **GPU** (p. ej. RTX 4090 / A4000 según presupuesto).
-2. **Container image:** `TU_USUARIO/melodai-worker:latest` (o GHCR).
-3. **Container disk:** ≥ 20 GB (modelo Demucs + caché).
-4. **Expose HTTP Ports:** no necesario (el worker no sirve HTTP).
-5. **Environment variables:**
+### 4.1 Cuenta y créditos
 
-| Variable | Valor |
-|----------|--------|
-| `REDIS_URL` | `rediss://...` (Upstash) |
+1. [runpod.io](https://www.runpod.io) → registro.
+2. **Billing** → añade método de pago o créditos (GPU de pago por hora).
+3. Verifica email si lo pide.
+
+### 4.2 Crear el Pod
+
+1. Menú **Pods** → **+ Deploy** (o **Deploy a Pod**).
+2. Elige **GPU** (Community Cloud suele ser más barato):
+   - Para pruebas: **RTX 3090 / 4090 / A4000** (≥ 16 GB VRAM recomendado).
+3. **Template / Container image** → **Custom image** (no plantilla PyTorch genérica).
+4. **Container image:**
+   ```text
+   ghcr.io/arielp79/melodai-worker:latest
+   ```
+5. **Container disk:** `30` GB (modelo Demucs + caché).
+6. **Volume disk:** no obligatorio si usas `GOOGLE_SERVICE_ACCOUNT_JSON` en env.
+7. **Expose HTTP ports:** déjalo vacío (el worker no expone web).
+8. **Start Jupyter / SSH:** desactivado (no hace falta).
+
+### 4.3 Variables de entorno
+
+En **Environment variables** (Edit / Add) — copia desde tu setup actual:
+
+| Key | Value |
+|-----|--------|
+| `REDIS_URL` | Upstash `rediss://...` (igual que Render) |
 | `REDIS_SEPARATION_QUEUE` | `melodai:separation:jobs` |
 | `ORCHESTRATOR_URL` | `https://melodai-orchestrator.onrender.com` |
-| `WORKER_API_KEY` | Misma que Render |
+| `WORKER_API_KEY` | **Igual que en Render** |
 | `DEMUCS_ENABLED` | `true` |
 | `DEMUCS_MODEL` | `htdemucs_6s` |
 | `DEMUCS_DEVICE` | `cuda` |
 | `DEMUCS_FALLBACK_STUB` | `false` |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | JSON minificado (`.\scripts\render-gcp-json.ps1`) |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Salida de `.\scripts\render-gcp-json.ps1` (una línea) |
 
-**Alternativa a `GOOGLE_SERVICE_ACCOUNT_JSON`:** montar archivo en `/secrets/service-account.json` y definir solo `GOOGLE_APPLICATION_CREDENTIALS=/secrets/service-account.json`.
+En Windows, prepara valores:
 
-6. **Deploy** → abre **Logs** del pod.
+```powershell
+cd C:\Proyectos\melodai_app
+# WORKER_API_KEY ya está en Render — no generes otra distinta
+.\scripts\render-gcp-json.ps1
+```
 
-Log esperado:
+`REDIS_URL` y `WORKER_API_KEY`: cópialos de Render → Environment (no los pegues en chat).
+
+### 4.4 Registry privado (si GHCR no es público)
+
+**Pod settings** → **Container registry credentials**:
+
+- Registry: `ghcr.io`
+- Username: tu usuario GitHub
+- Password: [Personal Access Token](https://github.com/settings/tokens) con `read:packages`
+
+Si el paquete es **Public**, no hace falta.
+
+### 4.5 Deploy y logs
+
+1. **Deploy** / **Create Pod**.
+2. Espera estado **Running** (puede tardar 1–3 min en pull de imagen).
+3. Clic en el pod → **Logs** (o **Connect** → log stream).
+
+Logs OK:
 
 ```text
 Conectado a Redis. Cola: melodai:separation:jobs
@@ -93,17 +147,24 @@ HTDemucs: model=htdemucs_6s device=cuda
 Modelo Demucs htdemucs_6s listo.
 ```
 
+### 4.6 Parar worker local
+
+En tu PC: **Ctrl+C** en `python main.py`. Si no, tu PC y RunPod compiten por la misma cola.
+
+### 4.7 Probar
+
+1. Flutter con `API_BASE_URL=https://melodai-orchestrator.onrender.com`.
+2. Sube audio corto → **Separar pistas**.
+3. Logs del pod: actividad Demucs.
+4. Job `simulated: false` en la app.
+
+### 4.8 Apagar pod (ahorrar)
+
+Cuando no uses GPU: **Stop** / **Terminate** el pod en el dashboard.
+
 ---
 
-## 5. Apagar el worker local
-
-Si sigues con `python main.py` en tu PC **y** RunPod activos, ambos compiten por la misma cola Redis.
-
-Detén el worker en Windows antes de probar solo RunPod.
-
----
-
-## 6. Probar E2E
+## 5. Apagar el worker local (recordatorio)
 
 1. App Flutter con `API_BASE_URL` de Render.
 2. Sube un audio **corto** (primera vez descarga el modelo en el pod).
