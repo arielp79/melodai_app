@@ -3,7 +3,6 @@ import os
 import tempfile
 from pathlib import Path
 
-# Certificados Windows antes de importar google.cloud.
 from ssl_bootstrap import apply_windows_ssl
 
 apply_windows_ssl()
@@ -13,6 +12,14 @@ from google.cloud import storage
 from config import Settings
 
 logger = logging.getLogger(__name__)
+
+
+def get_storage_client(settings: Settings) -> storage.Client:
+    """Archivo JSON local o ADC (VM GCP con cuenta de servicio adjunta)."""
+    if not settings.gcs_use_adc:
+        return storage.Client.from_service_account_json(settings.gcs_credentials)
+    logger.info("GCS: Application Default Credentials (cuenta de servicio del VM)")
+    return storage.Client()
 
 
 def download_mix(job: dict, settings: Settings) -> Path:
@@ -25,7 +32,7 @@ def download_mix(job: dict, settings: Settings) -> Path:
     if not object_key:
         raise ValueError("objectKey ausente en el payload del job.")
 
-    client = storage.Client.from_service_account_json(settings.gcs_credentials)
+    client = get_storage_client(settings)
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(object_key)
 
@@ -58,7 +65,7 @@ def upload_stem(
     local_path: Path,
     settings: Settings,
 ) -> None:
-    client = storage.Client.from_service_account_json(settings.gcs_credentials)
+    client = get_storage_client(settings)
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(object_key)
     blob.upload_from_filename(

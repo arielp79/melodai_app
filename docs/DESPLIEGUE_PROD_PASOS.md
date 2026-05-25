@@ -10,7 +10,7 @@ Guía operativa ordenada. Detalle de arquitectura: [INFRA_PRODUCCION.md](INFRA_P
 | 2 | Upstash Redis (`rediss://`) | ⬜ |
 | 3 | Orquestador (Cloud Run o Render) | ⬜ |
 | 4 | Secretos `WORKER_API_KEY` fuerte | ⬜ |
-| 5 | Worker GPU (RunPod / VM) | ⬜ |
+| 5 | Worker GPU (GCP trial o RunPod) | ⬜ |
 | 6 | Flutter `API_BASE_URL` prod | ⬜ |
 | 7 | E2E prod (subida → separación → export) | ⬜ |
 
@@ -94,7 +94,10 @@ Resumen: Blueprint con [render.yaml](../render.yaml) → variables `MONGODB_URI`
 
 ## Paso 4 — Worker GPU
 
-Guía detallada: **[RUNPOD_WORKER.md](RUNPOD_WORKER.md)** (Docker + RunPod).
+| Opción | Cuándo |
+|--------|--------|
+| **[GCP_WORKER_GPU.md](GCP_WORKER_GPU.md)** | Trial ~$300, sin depósito RunPod — **recomendado ahora** |
+| **[RUNPOD_WORKER.md](RUNPOD_WORKER.md)** | Cuando GCP trial termine o quieras GPU por hora |
 
 No va en Cloud Run. RunPod / VM con [worker/.env.production.example](../worker/.env.production.example):
 

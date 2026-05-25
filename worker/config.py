@@ -14,6 +14,7 @@ class Settings:
     worker_api_key: str
     stub_delay_ms: int
     gcs_credentials: str
+    gcs_use_adc: bool
     demucs_enabled: bool
     demucs_model: str
     demucs_device: str
@@ -24,6 +25,7 @@ class Settings:
         redis_url = os.getenv("REDIS_URL", "").strip()
         worker_api_key = os.getenv("WORKER_API_KEY", "").strip()
         orchestrator_url = os.getenv("ORCHESTRATOR_URL", "http://127.0.0.1:3000").strip().rstrip("/")
+        gcs_use_adc = os.getenv("GCS_USE_ADC", "").lower() in ("1", "true", "yes")
         gcs_credentials = os.getenv(
             "GOOGLE_APPLICATION_CREDENTIALS",
             "../backend/service-account.json",
@@ -33,9 +35,10 @@ class Settings:
             raise ValueError("REDIS_URL es obligatoria para el worker.")
         if not worker_api_key:
             raise ValueError("WORKER_API_KEY es obligatoria (misma que en backend/.env).")
-        if not os.path.isfile(gcs_credentials):
+        if not gcs_use_adc and not os.path.isfile(gcs_credentials):
             raise ValueError(
-                f"GOOGLE_APPLICATION_CREDENTIALS no encontrado: {gcs_credentials}",
+                f"GOOGLE_APPLICATION_CREDENTIALS no encontrado: {gcs_credentials}. "
+                "En GCP VM usa GCS_USE_ADC=true y cuenta de servicio con Storage Object Admin.",
             )
 
         demucs_enabled = os.getenv("DEMUCS_ENABLED", "true").lower() in (
@@ -50,7 +53,8 @@ class Settings:
             orchestrator_url=orchestrator_url,
             worker_api_key=worker_api_key,
             stub_delay_ms=int(os.getenv("WORKER_STUB_DELAY_MS", "8000")),
-            gcs_credentials=os.path.abspath(gcs_credentials),
+            gcs_credentials=os.path.abspath(gcs_credentials) if gcs_credentials else "",
+            gcs_use_adc=gcs_use_adc,
             demucs_enabled=demucs_enabled,
             demucs_model=os.getenv("DEMUCS_MODEL", "htdemucs_6s").strip(),
             demucs_device=os.getenv("DEMUCS_DEVICE", "cpu").strip(),

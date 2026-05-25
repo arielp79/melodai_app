@@ -1,5 +1,7 @@
 # Worker GPU en RunPod (Docker)
 
+> **Sin depósito RunPod:** usa primero [GCP_WORKER_GPU.md](GCP_WORKER_GPU.md) (trial). Esta guía aplica cuando migres a RunPod.
+
 El worker consume la cola **Upstash** (`rediss://`), separa con **HTDemucs** en GPU y reporta a **Render**.
 
 ```text
